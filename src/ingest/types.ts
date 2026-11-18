@@ -28,6 +28,11 @@ export interface DeliveryEvent {
   /** How long the piggyback offer window stays open. Defaults to 10. */
   piggybackWindowMinutes?: number;
   sourceAdapter: SourceAdapter;
+  /** Neighbor runs: the subscriber who posted it. They are never notified
+   *  about their own run. */
+  postedBySubscriberId?: string;
+  /** Neighbor runs: coarse area label shown instead of an address. */
+  areaLabel?: string;
   /** Original payload, stored for debugging. */
   raw?: unknown;
 }
@@ -36,4 +41,6 @@ export interface IngestResult {
   deliveryId: string;
   notified: number;
   alreadyExisted: boolean;
+  /** Matched neighbors skipped for quiet hours or the daily cap. */
+  skipped?: number;
 }

@@ -3,10 +3,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 /**
- * Demo "Order now" button. Flips `orderPlaced = true` on the
- * notification row so analytics can count conversions. In production
- * this would deep-link into the retailer's own ordering flow and
- * reconcile via webhook instead.
+ * "I ordered" self-report. The neighbor orders on the shop's own site or
+ * by phone; this just records it so we can count piggyback orders per shop.
  */
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +17,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   const updated = await db.notification.updateMany({
     where: { deliveryId: id, subscriberId: subscriber.id },
-    data: { orderPlaced: true },
+    data: { orderPlaced: true, orderedAt: new Date() },
   });
   if (updated.count === 0) {
     return NextResponse.json({ error: "not found" }, { status: 404 });

@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { TestDeliveryForm } from "./TestDeliveryForm";
+import { ShopForm } from "./ShopForm";
 
 export const metadata = { title: "Admin — Piggyback" };
 
@@ -36,6 +37,23 @@ export default async function AdminPage() {
   for (const row of clickCounts) if (byId[row.deliveryId]) byId[row.deliveryId].clicks = row._count._all;
   for (const row of orderCounts) if (byId[row.deliveryId]) byId[row.deliveryId].orders = row._count._all;
 
+  // Per-shop proof: the numbers you take to a shop owner.
+  const shopStats = await db.$queryRaw<
+    { id: string; name: string; runs: bigint; orders: bigint; same_run: bigint; fee_waived: bigint }[]
+  >`
+    SELECT r.id, r.name,
+      COUNT(DISTINCT d.id) FILTER (WHERE d."createdAt" > now() - interval '30 days') AS runs,
+      COUNT(n.id) FILTER (WHERE n."orderPlaced" AND n."sentAt" > now() - interval '30 days') AS orders,
+      COUNT(n.id) FILTER (WHERE n."sameRun" IS TRUE AND n."sentAt" > now() - interval '30 days') AS same_run,
+      COUNT(n.id) FILTER (WHERE n."feeWaived" IS TRUE AND n."sentAt" > now() - interval '30 days') AS fee_waived
+    FROM "Retailer" r
+    LEFT JOIN "Delivery" d ON d."retailerId" = r.id
+    LEFT JOIN "Notification" n ON n."deliveryId" = d.id
+    WHERE r.listed = true
+    GROUP BY r.id, r.name
+    ORDER BY orders DESC, runs DESC, r.name ASC;
+  `;
+
   return (
     <div className="space-y-10">
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -43,6 +61,39 @@ export default async function AdminPage() {
         <Stat label="Active subscribers" value={subscribers} />
         <Stat label="Push endpoints" value={pushSubs} />
         <Stat label="Waitlist leads" value={leads} />
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold">Shops, last 30 days</h2>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+          Runs posted by neighbors, piggyback orders, and how many of those
+          came on the same run or had the fee dropped.
+        </p>
+        {shopStats.length === 0 ? (
+          <p className="mt-2 text-neutral-500">No shops listed yet.</p>
+        ) : (
+          <ul className="mt-4 divide-y divide-neutral-200 rounded-lg border border-neutral-200 bg-white text-sm dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
+            {shopStats.map((r) => (
+              <li key={r.id} className="p-3">
+                <div className="font-semibold">{r.name}</div>
+                <div className="text-neutral-600 dark:text-neutral-300">
+                  {Number(r.runs)} runs · {Number(r.orders)} piggyback orders · {Number(r.same_run)} same run · {Number(r.fee_waived)} fee dropped
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold">Add a shop</h2>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+          Only shops that run their own drivers. Right-click the shop in Google
+          Maps to copy its latitude and longitude.
+        </p>
+        <div className="mt-4 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+          <ShopForm />
+        </div>
       </section>
 
       <section>

@@ -13,8 +13,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!isAdminEmail(session.user.email)) redirect("/home");
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <header className="border-b border-neutral-200 bg-white">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+      <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link href="/admin" className="font-bold">
             <span className="text-brand-600">Piggy</span>back · admin

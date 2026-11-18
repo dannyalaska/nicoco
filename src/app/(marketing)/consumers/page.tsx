@@ -10,24 +10,25 @@ export default function ConsumersPage() {
         ← Back
       </Link>
       <h1 className="mt-6 text-4xl font-extrabold tracking-tight">
-        Free delivery, but only when a driver is already coming.
+        Your neighbor already ordered. Ride the same run.
       </h1>
-      <p className="mt-4 text-lg text-neutral-600">
-        Tell us your neighborhood and turn on notifications. When a
-        participating shop&apos;s driver heads toward your block, you&apos;ll
-        get a ping. Order in the next few minutes and the same driver drops
-        yours off too — no delivery fee.
+      <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-300">
+        Turn on notifications and share a rough location. When someone a few
+        blocks over orders from a local shop with its own drivers, you get a
+        heads up. Order from that shop and ask them to send yours on the same
+        run. Some shops drop the fee when they do.
       </p>
 
-      <ul className="mt-10 space-y-4 text-neutral-700">
-        <li>• No ads. No spam. Only pings when a driver is actually close.</li>
-        <li>• Works with any participating shop, not a single app.</li>
-        <li>• Quiet hours so you&apos;re not woken up for a 2am burrito run.</li>
+      <ul className="mt-10 space-y-4 text-neutral-700 dark:text-neutral-200">
+        <li>• Only your block is shared when you post a run. Never your address or name.</li>
+        <li>• Quiet hours and a daily cap. No ads.</li>
+        <li>• Works with the shop&apos;s own site or phone. Piggyback never takes payment.</li>
+        <li>• On iPhone, add Piggyback to your Home Screen to get notifications.</li>
       </ul>
 
-      <section className="mt-16 rounded-2xl border border-neutral-200 p-8">
+      <section className="mt-16 rounded-2xl border border-neutral-200 p-8 dark:border-neutral-800">
         <h2 className="text-2xl font-bold">Get on the waitlist</h2>
-        <p className="mt-2 text-neutral-600">
+        <p className="mt-2 text-neutral-600 dark:text-neutral-300">
           We&apos;re seeding one neighborhood at a time. Tell us where you
           are and we&apos;ll let you know when Piggyback goes live near you.
         </p>

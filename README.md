@@ -1,10 +1,21 @@
 # Piggyback
 
-Proximity delivery notification service. When a retailer dispatches a driver to
-a neighborhood, nearby subscribed users get a push notification. They can order
-quickly and the same driver drops theirs off too — no delivery fee. Three-way
-win: retailer gets extra marginal orders, consumer gets free delivery, driver
-earns more on the same trip.
+Neighbor-powered delivery pings. When you order delivery from a local shop that
+runs its own driver, you tap "Piggyback it". Neighbors within a few blocks get a
+push: that shop is delivering near them in about N minutes. They can order from
+the shop's own site or phone and ask to go on the same run.
+
+Shops never have to sign up. An admin lists shops (name, address, phone,
+ordering link). If a shop later agrees to drop or cut its delivery fee for
+same-run orders, that goes in its "same-run perk" and shows on every ping.
+The app never promises free delivery on its own.
+
+Privacy: a run's drop-off point is the poster's saved location snapped to a
+roughly one-block grid, and the area label has digits stripped, so neighbors
+never learn which house ordered.
+
+Fatigue limits: per-person radius (default 600 m), quiet hours (default 10 PM
+to 9 AM in their time zone) and a daily cap (default 3 pings).
 
 This is an MVP built as a PWA. Everything — landing page, consumer app,
 retailer dashboard, admin tools, ingest webhooks — runs inside one Next.js
@@ -60,6 +71,8 @@ Paste all three VAPID values into `.env.local` (public, private, and
 
 Set `ADMIN_EMAILS` to the address you'll use to sign in for the demo.
 
+Set `DIRECT_URL` to the same value as `DATABASE_URL` for local dev.
+
 ### 4. Run migrations and seed
 
 ```bash
@@ -100,6 +113,18 @@ Open `http://localhost:3000`.
 9. Refresh `/admin` → the recent-deliveries table shows `notified / clicks /
    orders` counts incrementing.
 
+## Neighbor run loop
+
+1. Sign in on two browsers (or a normal and a private window) with two emails.
+2. Onboard both with nearby locations and turn on notifications.
+3. As admin, add a shop at `/admin` ("Add a shop") within a few km.
+4. In browser A, go to "Piggyback it", pick the shop and an ETA, post.
+5. Browser B gets the ping. Tap it to see the offer page with the shop's
+   order link, phone and the line to ask for the same run.
+6. After "I ordered", the two follow-up questions (same run? fee dropped?)
+   feed the per-shop stats on `/admin`. Those stats are what you show a shop
+   when asking for a same-run perk.
+
 ## Retailer webhook test
 
 ```bash
@@ -135,15 +160,22 @@ Every retailer integration normalizes into `DeliveryEvent` and calls
 npm test
 ```
 
-The unit tests cover the webhook HMAC verification and the zod schemas.
-The full pipeline (`ingestDeliveryEvent`, `findSubscribersNear`) needs a real
-Postgres with PostGIS to run, so those live in the verification loop above.
+The unit tests cover the webhook HMAC verification, the zod schemas and the
+neighbor-run rules (block snapping, quiet hours, copy).
+
+`npm run test:smoke` runs the full pipeline against a real Postgres with
+PostGIS and a fake HTTPS push server: poster excluded, quiet hours skipped,
+far neighbors not matched, idempotency, daily cap. See the header of
+`scripts/smoke-neighbor-run.ts` for the env it needs. Never point it at
+production.
+
+## Deploy
+
+See [DEPLOY.md](./DEPLOY.md).
 
 ## Roadmap / not-in-MVP
 
 - POS adapters (Square, Toast, Clover, DoorDash Drive)
 - SMS / email fallback when push isn't granted
-- Quiet hours + radius customization per subscriber
-- Real "order now" deep-link to retailer ordering flows
 - Multi-location retailer accounts
-- Abuse / notification-fatigue limits
+- Shop-side view of their same-run stats

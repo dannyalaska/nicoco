@@ -15,9 +15,9 @@ export default function OnboardingPage() {
       <p className="text-neutral-600">Two quick permissions and you&apos;re done.</p>
 
       <StepCard n={1} title="Share your location" active={step === 1} done={step > 1}>
-        <p className="text-sm text-neutral-600">
-          We need a rough position so we know which deliveries are near you.
-          We don&apos;t sell or share this.
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+          We use a rough position to match you with runs on nearby blocks.
+          Neighbors only ever see your block, never your address.
         </p>
         <div className="mt-3">
           <LocationGrant onDone={() => setStep(2)} />
@@ -25,8 +25,9 @@ export default function OnboardingPage() {
       </StepCard>
 
       <StepCard n={2} title="Turn on notifications" active={step === 2} done={step > 2}>
-        <p className="text-sm text-neutral-600">
-          We only ping you when a driver is actually near. No spam, no ads.
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+          Only when a neighbor&apos;s delivery is a few blocks away. Quiet hours
+          and a daily cap are on by default.
         </p>
         <p className="mt-2 text-xs text-neutral-500">
           On iPhone? Add Piggyback to your Home Screen first, then open it
@@ -41,8 +42,9 @@ export default function OnboardingPage() {
       </StepCard>
 
       <StepCard n={3} title="You&apos;re all set" active={step === 3} done={false}>
-        <p className="text-sm text-neutral-600">
-          We&apos;ll ping you next time a driver is nearby.
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+          Next time you order from a local shop, tap Piggyback it so your
+          neighbors can ride the same run.
         </p>
         <button
           type="button"
@@ -67,7 +69,9 @@ function StepCard(props: {
     <section
       className={[
         "rounded-xl border p-6",
-        props.active ? "border-brand-600 bg-white shadow-sm" : "border-neutral-200 bg-white/60",
+        props.active
+          ? "border-brand-600 bg-white shadow-sm dark:bg-neutral-900"
+          : "border-neutral-200 bg-white/60 dark:border-neutral-800 dark:bg-neutral-900/60",
       ].join(" ")}
     >
       <div className="flex items-center gap-2">

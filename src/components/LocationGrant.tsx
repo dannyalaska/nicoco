@@ -23,6 +23,8 @@ export function LocationGrant({ onDone }: { onDone: () => void }) {
             body: JSON.stringify({
               lat: pos.coords.latitude,
               lon: pos.coords.longitude,
+              // Runs you post are pinned to your block from here.
+              setHome: true,
             }),
           });
           if (!res.ok) throw new Error(`save failed (${res.status})`);

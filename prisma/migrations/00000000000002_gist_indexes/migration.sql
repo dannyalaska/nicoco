@@ -3,10 +3,7 @@
 -- them via this hand-edited migration. The column names match the
 -- `@map`-less defaults Prisma uses for `Unsupported` fields.
 --
--- Run this AFTER `prisma migrate dev` has created the base tables.
--- If you run `prisma migrate dev` on a fresh DB, Prisma will generate
--- a middle migration creating the tables; this file should be kept
--- as the final migration in the chain.
+-- Runs after 00000000000001_init, which creates the base tables.
 
 CREATE INDEX IF NOT EXISTS "Retailer_location_gist"
   ON "Retailer" USING GIST ("location");

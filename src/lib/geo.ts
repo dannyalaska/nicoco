@@ -140,3 +140,36 @@ export async function getRetailerLocation(retailerId: string): Promise<LatLon | 
   `;
   return rows[0] ?? null;
 }
+
+/**
+ * A subscriber's best known location: current fix if set, else home.
+ * Used as the drop-off point when they post a neighbor run.
+ */
+export async function getSubscriberLocation(subscriberId: string): Promise<LatLon | null> {
+  const rows = await db.$queryRaw<{ lat: number; lon: number }[]>`
+    SELECT
+      ST_Y(COALESCE("currentLocation", "homeLocation")::geometry) AS lat,
+      ST_X(COALESCE("currentLocation", "homeLocation")::geometry) AS lon
+    FROM "Subscriber"
+    WHERE id = ${subscriberId}
+      AND COALESCE("currentLocation", "homeLocation") IS NOT NULL;
+  `;
+  return rows[0] ?? null;
+}
+
+/** Listed shops ordered by distance from a point, nearest first. */
+export async function listShopsNear(
+  point: LatLon,
+  maxMeters = 8000,
+): Promise<{ id: string; name: string; distance_m: number }[]> {
+  return db.$queryRaw<{ id: string; name: string; distance_m: number }[]>`
+    SELECT r.id, r.name,
+      ST_Distance(r."location", ST_SetSRID(ST_MakePoint(${point.lon}, ${point.lat}), 4326)::geography) AS distance_m
+    FROM "Retailer" r
+    WHERE r.listed = true
+      AND r."location" IS NOT NULL
+      AND ST_DWithin(r."location", ST_SetSRID(ST_MakePoint(${point.lon}, ${point.lat}), 4326)::geography, ${maxMeters})
+    ORDER BY distance_m ASC
+    LIMIT 50;
+  `;
+}

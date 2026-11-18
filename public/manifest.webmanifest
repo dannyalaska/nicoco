@@ -1,7 +1,7 @@
 {
   "name": "Piggyback",
   "short_name": "Piggyback",
-  "description": "Free delivery when a driver is already nearby.",
+  "description": "Ride your neighbor's delivery run.",
   "start_url": "/home",
   "display": "standalone",
   "background_color": "#ffffff",

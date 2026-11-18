@@ -12,6 +12,9 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
+  // Direct (non-pooled) connection for migrations. On Supabase this is
+  // the port 5432 connection string; DATABASE_URL is the pooler.
+  directUrl  = env("DIRECT_URL")
   extensions = [postgis]
 }
 
@@ -88,6 +91,7 @@ enum DeliveryStatus {
 
 enum SourceAdapter {
   manual
+  neighbor
   webhook
   square
   toast
@@ -114,6 +118,18 @@ model Retailer {
   webhookSecret  String       @unique
   ingestMode     IngestMode   @default(manual)
   plan           RetailerPlan @default(pilot)
+  // Neighbor-run fields. A shop can be on the list without ever signing
+  // up: neighbors post runs for it, and the offer page sends people to
+  // the shop's own ordering page or phone.
+  phone          String?
+  orderUrl       String?
+  category       String?
+  // Shown on the list only when true. Admin flips it off for shops that
+  // stop delivering or ask to be removed.
+  listed         Boolean      @default(true)
+  // Set once the shop has agreed to waive or cut the fee on same-run
+  // orders. Free text so it can say exactly what they offered.
+  sameRunPerk    String?
   createdAt      DateTime     @default(now())
 
   users      RetailerUser[]
@@ -165,16 +181,22 @@ model Delivery {
   externalId             String?
   piggybackWindowMinutes Int            @default(10)
   rawPayload             Json?
+  // Neighbor runs: who posted it and a coarse label ("near Main St")
+  // instead of a street address. destLocation is snapped to a block grid.
+  postedById             String?
+  areaLabel              String?
   createdAt              DateTime       @default(now())
 
   retailer      Retailer       @relation(fields: [retailerId], references: [id], onDelete: Cascade)
   driver        Driver?        @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  postedBy      Subscriber?    @relation("PostedRuns", fields: [postedById], references: [id], onDelete: SetNull)
   notifications Notification[]
 
   // Idempotent ingest: same (retailer, adapter, externalId) will upsert
   // the same Delivery row instead of duplicating.
   @@unique([retailerId, sourceAdapter, externalId])
   @@index([status, dispatchedAt])
+  @@index([postedById, createdAt])
 }
 
 model Subscriber {
@@ -183,13 +205,23 @@ model Subscriber {
   // PostGIS: home + current location (lon, lat). Managed via raw SQL.
   homeLocation    Unsupported("geography(Point,4326)")?
   currentLocation Unsupported("geography(Point,4326)")?
-  radiusMeters    Int                                   @default(1500)
+  // Neighbor runs only make sense a few blocks out. 600 m is roughly
+  // a 7 minute walk.
+  radiusMeters    Int                                   @default(600)
   active          Boolean                               @default(true)
+  // Quiet hours in the subscriber's local time, 0 to 23. No pings when
+  // the current hour is in [quietStartHour, quietEndHour).
+  quietStartHour  Int                                   @default(22)
+  quietEndHour    Int                                   @default(9)
+  timeZone        String                                @default("America/New_York")
+  // Notification fatigue cap.
+  maxPerDay       Int                                   @default(3)
   createdAt       DateTime                              @default(now())
 
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   pushSubs      PushSubscription[]
   notifications Notification[]
+  postedRuns    Delivery[]         @relation("PostedRuns")
 }
 
 model PushSubscription {
@@ -213,6 +245,11 @@ model Notification {
   deliveredAt    DateTime?
   clickedAt      DateTime?
   orderPlaced    Boolean   @default(false)
+  orderedAt      DateTime?
+  // Follow-up answer: did the order come on the same run? null = not answered.
+  sameRun        Boolean?
+  // Did the shop drop or cut the delivery fee? null = not answered.
+  feeWaived      Boolean?
   distanceMeters Int
 
   delivery   Delivery   @relation(fields: [deliveryId], references: [id], onDelete: Cascade)

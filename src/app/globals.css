@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
 }
 
 html, body {
@@ -11,5 +11,5 @@ html, body {
 }
 
 body {
-  @apply bg-white text-neutral-900 antialiased;
+  @apply bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
 }

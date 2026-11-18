@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Piggyback — Free delivery when a driver is nearby",
+  title: "Piggyback: ride your neighbor's delivery run",
   description:
-    "Get notified the moment a delivery driver is dispatched to your neighborhood. Order quickly and skip the delivery fee.",
+    "Get a heads up when a neighbor orders from a local shop with its own drivers, then order from the same shop and ask for the same run.",
   manifest: "/manifest.webmanifest",
 };
 
